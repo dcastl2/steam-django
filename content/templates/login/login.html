@@ -1,0 +1,12 @@
+<h1>Login</h1>
+
+<form action="{% url 'content:auth' %}" method="post"> 
+{% csrf_token %}
+  <input type="textbox"  name="username" id="username" value="" /> <br/>
+  <input type="password" name="password" id="password" value="" /> <br/>
+<input type="submit" value="Login" />
+</form>
+
+{% if request != NULL %}
+ {{ request.POST }}
+{% endif %}
