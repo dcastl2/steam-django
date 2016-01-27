@@ -8,15 +8,12 @@ from docutils.core              import publish_parts
 from os.path                    import abspath, dirname
 from re                         import sub
 
-
 ################################################################################
 # Regex which gives extensions.
 ################################################################################
 regex=".*(\.cpp|\.java|\.txt)$"
 curdir = abspath(dirname(__file__));
 ################################################################################
-
-
 
 ################################################################################
 # Definitions.
@@ -61,9 +58,6 @@ item_formats = (
 );
 ################################################################################
 
-
-
-
 ################################################################################
 # Place to upload to.
 ################################################################################
@@ -75,6 +69,15 @@ def upload_to(self, filename):
   return s;
 ################################################################################
 
+################################################################################
+# Place to upload response to.
+################################################################################
+def upload_response(self, filename):
+  s  = settings.MEDIA_URL;
+  s += self.student.email + '/';
+  s += str(self.question.id);
+  return s;
+################################################################################
 
 ################################################################################
 # Place to upload image to.
@@ -87,9 +90,8 @@ def img_upload_to(self, filename):
   return s;
 ################################################################################
 
-
 ################################################################################
-# Student profile
+# Student user manager
 ################################################################################
 class MyUserManager(BaseUserManager):
     def create_user(self, email, password=None):
@@ -101,7 +103,7 @@ class MyUserManager(BaseUserManager):
         user.set_password(password)
         user.save(using=self._db)
         return user
-
+ 
     def create_superuser(self, email, password):
         user = self.create_user(email,
             password=password,
@@ -109,8 +111,11 @@ class MyUserManager(BaseUserManager):
         user.is_admin = True
         user.save(using=self._db)
         return user
+################################################################################
 
-
+################################################################################
+# Student user/profile
+################################################################################
 class MyUser(AbstractBaseUser):
   email = models.EmailField(
             verbose_name='email address',
@@ -121,73 +126,68 @@ class MyUser(AbstractBaseUser):
   is_admin  = models.BooleanField(default=False);
   lattice   = models.TextField();
   answered  = models.TextField();
-  
-  objects = MyUserManager();
 
+  objects = MyUserManager();
   USERNAME_FIELD  = 'email'
   REQUIRED_FIELDS = []
-
+ 
   def has_answered_question(self, qid):
         str_qid = ","+str(qid)+",";
         #answer_list = self.answered.split(",");
         return (str_qid in self.answered);
-
+ 
   def push_answered_question(self, qid):
         self.answered += str(qid)+",";
         self.save();
         return True;
-
+ 
   def get_full_name(self):
         # The user is identified by their email address
         return self.email;
-
+ 
   def get_short_name(self):
         # The user is identified by their email address
         return self.email;
-
+ 
   def __str__(self):              # __unicode__ on Python 2
         return self.email;
-
+ 
   def has_perm(self, perm, obj=None):
         "Does the user have a specific permission?"
         # Simplest possible answer: Yes, always
         return True
-
+ 
   def has_module_perms(self, app_label):
         "Does the user have permissions to view the app `app_label`?"
         # Simplest possible answer: Yes, always
         return True
-
+ 
   @property
   def is_staff(self):
         "Is the user a member of staff?"
         # Simplest possible answer: All admins are staff
         return self.is_admin
-
 ################################################################################
-
 
 ################################################################################
 # Code model
 ################################################################################
 class Code(models.Model):
-
+ 
   name     = models.CharField(max_length=64);
   lang     = models.CharField(max_length=64);
   concept  = models.CharField(max_length=64);
   codefile = models.FileField(upload_to=upload_to,max_length=64);
-
+ 
   def __str__(self):
     return str(self.lang)+": "+str(self.name);
 ################################################################################
-
-
 
 ################################################################################
 # Question model
 ################################################################################
 class Question(models.Model):
-
+ 
   concept   = models.CharField(max_length=64);
   bloom     = models.CharField(max_length=16, choices=bloom_levels);
   domain    = models.CharField(max_length=64, choices=domains);
@@ -198,14 +198,14 @@ class Question(models.Model):
   image     = models.ImageField(blank=True, null=True);
   text      = models.TextField();
   solution  = models.TextField();
-
+ 
   def __str__(self):
     s  = str(self.concept) + ', L. ';
     s += str(self.level)   + ', ';
     s += str(self.form)    + ' (';
     s += str(self.domain)  + ').';
     return s;
-
+ 
   def choices(self):
    lines = self.solution.splitlines();
    html = "";
@@ -217,21 +217,19 @@ class Question(models.Model):
      html += "<label class=mc for="+str(i)+">"+line+"</label></input><br>";
      i += 1
    return html;
-
+ 
   def textformat(self):
    return publish_parts(self.text, writer_name='html')['html_body'];
-
+ 
   def stars(self):
     return '*'*self.level;
 ################################################################################
-
-
 
 ################################################################################
 # Item model
 ################################################################################
 class Item(models.Model):
-
+ 
   concept   = models.CharField(max_length=64);
   bloom     = models.CharField(max_length=16, choices=bloom_levels);
   domain    = models.CharField(max_length=64, choices=domains);
@@ -241,28 +239,35 @@ class Item(models.Model):
   code      = models.ForeignKey(Code, blank=True, null=True);
   image     = models.ImageField(blank=True, null=True);
   text      = models.TextField();
-
+ 
   def __str__(self):
     s  = str(self.concept) + ', L. ';
     s += str(self.level)   + ', ';
     s += str(self.form)    + ' (';
     s += str(self.domain)  + ').';
     return s;
-
+ 
   def textformat(self):
    return publish_parts(self.text, writer_name='html')['html_body'];
-
+ 
   def stars(self):
     return '*'*self.level;
 ################################################################################
 
-
+################################################################################
+# Response (student response to a question)
+################################################################################
+class Response(models.Model):
+  student  = models.ForeignKey(MyUser,   on_delete=models.CASCADE);
+  question = models.ForeignKey(Question, on_delete=models.CASCADE);
+  formfile = models.FileField(upload_to=upload_response, max_length=64);
+################################################################################
 
 ################################################################################
-# Describes Many-To-Many relationship
+# Assessment 
 ################################################################################
 class Assessment(models.Model):
-  
+   
   name       = models.CharField(max_length=64);
   constraint = models.TextField();
   questions  = models.ManyToManyField(
@@ -273,20 +278,20 @@ class Assessment(models.Model):
                                                       'question',
                                                     )
                                     )
-
+ 
   def __str__(self):
     return self.name;
-
+ 
   def get_questions(self):
     return self.questions.all();
-
+ 
   def save(self, *args, **kwargs):
     super(Assessment, self).save(*args, **kwargs);
     if (self.questions):
       self.questions.clear();
     super(Assessment, self).save(*args, **kwargs);
     self.associate();
-
+  
   def associate(self):
     for q in Question.objects.raw(
         "select * from content_question where "+self.constraint
@@ -294,33 +299,29 @@ class Assessment(models.Model):
       AssessmentQuestion.create(q, self);
 ################################################################################
 
-
-
 ################################################################################
-# Describes Many-To-Many relationship
+# Describes Assessment-Question relationship
 ################################################################################
 class AssessmentQuestion(models.Model):
-
+ 
   question   = models.ForeignKey(Question);
   assessment = models.ForeignKey(Assessment);
-
+ 
   @classmethod
   def create(cls, question, assessment):
     aq = cls(question=question, assessment=assessment);
     super(AssessmentQuestion, aq).save();
     return aq;
-
+ 
   def __str__(self):
     return str(self.assessment)+": "+str(self.question);
 ################################################################################
 
-
-
 ################################################################################
-# Describes Many-To-Many relationship
+# Lecture (contains items)
 ################################################################################
 class Lecture(models.Model):
-  
+   
   name       = models.CharField(max_length=64);
   constraint = models.TextField();
   items      = models.ManyToManyField(
@@ -331,20 +332,20 @@ class Lecture(models.Model):
                                                       'item',
                                                     )
                                     )
-
+ 
   def __str__(self):
     return self.name;
-
+ 
   def get_items(self):
     return self.items.all();
-
+ 
   def save(self, *args, **kwargs):
     super(Lecture, self).save(*args, **kwargs);
     if (self.items):
       self.items.clear();
     super(Lecture, self).save(*args, **kwargs);
     self.associate();
-
+ 
   def associate(self):
     for i in Item.objects.raw(
         "select * from content_item where "+self.constraint
@@ -352,21 +353,19 @@ class Lecture(models.Model):
       LectureItem.create(i, self);
 ################################################################################
 
-
-
 ################################################################################
-# Describes Many-To-Many relationship
+# Describes Lecture-Item relationship
 ################################################################################
 class LectureItem(models.Model):
-  item   = models.ForeignKey(Item);
+  item    = models.ForeignKey(Item);
   lecture = models.ForeignKey(Lecture);
-
+ 
   @classmethod
   def create(cls, item, lecture):
     li = cls(item=item, lecture=lecture);
     super(LectureItem, li).save();
     return li;
-
+ 
   def __str__(self):
     return str(self.lecture)+": "+str(self.item);
 ################################################################################

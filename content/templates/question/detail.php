@@ -2,6 +2,11 @@
   Template for a question.
   ------------------------------------------------------------------------- -->
 
+<!-- TODO: 
+       check authentication
+        
+  -->
+
 
 <!-- -------------------------------------------------------------------------
   Load files, assign variables.
@@ -142,7 +147,9 @@
   Submit button
   ------------------------------------------------------------------------- -->
   <div class="button-container">
-   <input class=autograde type="submit" value="Grade" />
+   {% if not answered %}
+     <input class=autograde type="submit" value="Grade" />
+   {% endif %}
   </div>
   </form>
 {% endif %}
@@ -154,8 +161,10 @@
   ------------------------------------------------------------------------- -->
 {% if user.username != "" %}
  {% if question.correct != NULL %}
-  {{ question.correct }}
-  {{ user.answered }}
+  <!-- 
+     {{ question.correct }}
+     {{ user.answered }}
+    -->
  {% endif %}
 {% endif %}
 

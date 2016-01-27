@@ -1,8 +1,12 @@
+from django.conf         import settings       
+from django.contrib.auth import authenticate, login
+from django.core.files   import File
+from django.db           import models
 from django.http         import HttpResponse
 from django.shortcuts    import get_object_or_404, render, render_to_response
 from django.template     import RequestContext
-from django.contrib.auth import authenticate, login
-from .models             import Question, Item, Code, Assessment, Lecture, MyUser
+from .forms              import UploadFileForm
+from .models             import *
 
 
 ################################################################################
@@ -17,24 +21,50 @@ def index(request):
 ################################################################################
 # Todo: check data
 def autograde(request, user_id, question_id):
-    # Check that user_id is id of user logged in
-    i = 0
-    u = get_object_or_404(MyUser,   pk=user_id)
-    q = get_object_or_404(Question, pk=question_id)
-    u.push_answered_question(q.id)
-    lines = q.solution.splitlines()
-    print request.POST['choice']
-    q.correct = False
-    for line in lines:
-      print line[0]
-      print "choice"+str(i)
-      if (request.POST['choice']==("choice"+str(i)) and line[0]=='*'):
-        q.correct = True
-      i+=1
+    
+    if request.method=='POST':
+        student       = get_object_or_404(MyUser,   pk=user_id)
+        question      = get_object_or_404(Question, pk=question_id)
+
+        # Write response to file
+        path          = settings.MEDIA_URL+student.email+"/"+str(question.id);
+        responsefile  = open(path, 'w');
+        djangofile    = File(responsefile);
+        djangofile.write(request.POST['choice']);
+        djangofile.close();
+
+        # Open for reading
+        responsefile  = open(path, 'r');
+        djangofile    = File(responsefile);
+        response = Response(question=question, student=student, formfile=djangofile); 
+        response.save();
+        djangofile.close();
+
+        # Log that question was answered
+        student.push_answered_question(question.id)
+        print request.POST['choice']
+        index            = 0
+        lines            = question.solution.splitlines()
+        question.correct = False
+
+        # In the case of multiple choice, determine correctness
+        for line in lines:
+            print line[0]
+            print "choice"+str(index)
+            if (request.POST['choice']==("choice"+str(index))):
+                if (line[0]=='*'):
+                    question.correct = True
+            index+=1
+
+        return render( request, 
+                         'question/detail.php', 
+                         {'question': question}
+                     )
+    else: print request
     return render( request, 
-                   'question/detail.php', 
-                   {'question': q}
+                       'assessment/list.php', 
                  )
+    
 
 
 ################################################################################

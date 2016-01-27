@@ -11,12 +11,14 @@ from .models import Code
 from .models import Assessment
 from .models import Lecture
 from .models import MyUser
+from .models import Response
 
 admin.site.register(Question)
 admin.site.register(Item)
 admin.site.register(Code)
 admin.site.register(Assessment)
 admin.site.register(Lecture)
+admin.site.register(Response)
 
 
 class UserCreationForm(forms.ModelForm):
@@ -49,7 +51,7 @@ class UserChangeForm(forms.ModelForm):
 
     class Meta:
         model = MyUser
-        fields = ('email', 'password', 'is_active', 'is_admin')
+        fields = ('email', 'password', 'is_active', 'is_admin', 'answered', 'lattice')
 
     def clean_password(self):
         return self.initial["password"]
@@ -64,7 +66,7 @@ class UserAdmin(BaseUserAdmin):
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
     #   ('Personal info', {'fields': ('date_of_birth',)}),
-        ('Permissions',   {'fields': ('is_admin',)}),
+        ('Permissions',   {'fields': ('is_admin','answered','lattice')}),
     )
     add_fieldsets = (
         (None, {
