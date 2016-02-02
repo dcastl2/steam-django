@@ -7,6 +7,7 @@ from django.shortcuts    import get_object_or_404, render, render_to_response
 from django.template     import RequestContext
 from .forms              import UploadFileForm
 from .models             import *
+from django.utils.datastructures import MultiValueDictKeyError
 
 
 ################################################################################
@@ -16,21 +17,29 @@ def index(request):
   return HttpResponse("Hello, world!")
 
 
+
 ################################################################################
 # Running autograder on a question
 ################################################################################
-# Todo: check data
+# TODO: 
+#   write request data, regardless of type
+#   account for assessment
 def autograde(request, user_id, question_id):
-    
+
+    # Only grade if POST
     if request.method=='POST':
-        student       = get_object_or_404(MyUser,   pk=user_id)
-        question      = get_object_or_404(Question, pk=question_id)
+
+        # Get student and question objects
+        student       = get_object_or_404(MyUser,   pk=user_id);
+        question      = get_object_or_404(Question, pk=question_id);
 
         # Write response to file
         path          = settings.MEDIA_URL+student.email+"/"+str(question.id);
         responsefile  = open(path, 'w');
         djangofile    = File(responsefile);
-        djangofile.write(request.POST['choice']);
+        if   'choice'  in request.POST: djangofile.write(request.POST['choice']);
+        elif 'answer'  in request.POST: djangofile.write(request.POST['answer']);
+        elif 'sandbox' in request.POST: djangofile.write(request.POST['sandbox']);
         djangofile.close();
 
         # Open for reading
@@ -42,29 +51,43 @@ def autograde(request, user_id, question_id):
 
         # Log that question was answered
         student.push_answered_question(question.id)
-        print request.POST['choice']
-        index            = 0
-        lines            = question.solution.splitlines()
-        question.correct = False
+        index            = 0;
+        lines            = question.solution.splitlines();
+        question.correct = False;
 
         # In the case of multiple choice, determine correctness
-        for line in lines:
-            print line[0]
-            print "choice"+str(index)
-            if (request.POST['choice']==("choice"+str(index))):
+        if 'choice' in request.POST:
+            for line in lines:
+                print line[0];
+                print "choice"+str(index);
                 if (line[0]=='*'):
-                    question.correct = True
-            index+=1
+                    question.solution = line[1:];
+                    if (request.POST['choice']==("choice"+str(index))):
+                        question.correct  = True
+                index+=1
 
+        # In the case of short answer, determine if solution is response
+        elif 'answer' in request.POST:
+            if request.POST['answer'] == question.solution:
+                  question.correct = True;
+            else: question.correct = False;
+
+        # In the case of short answer, determine if solution is response
+        elif 'sandbox' in request.POST:
+            question.correct = False;
+
+        # Return request
         return render( request, 
                          'question/detail.php', 
-                         {'question': question}
+                         {'question': question }
                      )
+
+    # Print request if not POST
     else: print request
     return render( request, 
                        'assessment/list.php', 
                  )
-    
+
 
 
 ################################################################################
@@ -82,11 +105,13 @@ def assessment_detail(request, assessment_id):
 ################################################################################
 # For rendering a question
 ################################################################################
-def question_detail(request, question_id):
-  q = get_object_or_404(Question, pk=question_id)
+def question_detail(request, assessment_id, question_id):
+  # TODO: check that q in a
+  a = get_object_or_404(Assessment, pk=assessment_id)
+  q = get_object_or_404(Question,   pk=question_id)
   return render(  request, 
                   'question/detail.php',
-                  {'question': q}
+                  {'question': q, 'assessment': a}
                )
 
 

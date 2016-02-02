@@ -38,3 +38,8 @@ def answered_question(context, user, question):
       return False;
     return user.has_answered_question(question.id);
 
+@register.simple_tag(takes_context=True)
+def mc_choices(context, question, showcorrect):
+    if not question:
+      return False;
+    return question.choices(showcorrect);

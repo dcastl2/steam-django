@@ -4,7 +4,8 @@
 
 <!-- TODO: 
        check authentication
-        
+       response logging for code
+       assessment awareness
   -->
 
 
@@ -23,15 +24,28 @@
 {% endif %}
 
 
+<!-- 
+  <div class="panels-container">
+  -->
 
 <!-- -------------------------------------------------------------------------
   Display the username.
-  ------------------------------------------------------------------------- -->
 {% if user.username != "" %}
-  <div class="name-container">
-    {{ user }}
-  </div><br/>
+  <div class="left-panel">
+    <div class="name-container">
+      {{ user }}
+    </div>
+    <br/>
+  </div>
+  <div class="right-panel">
+    <div class="next-button">
+          <span style="display:inline-block; vertical-align:middle; position:relative; top:45%">
+            &gt;
+          </span>
+    </div>
+  </div>
 {% endif %}
+  ------------------------------------------------------------------------- -->
 
 
 
@@ -82,8 +96,8 @@
 <!-- -------------------------------------------------------------------------
   Form for a question response.
   ------------------------------------------------------------------------- -->
-{% if user.username != "" %}
-  <form class=mc action="{% url 'content:autograde' user.id question.id %}" method="post">
+{% if user.username != "" and question.solution %}
+  <form class="multiple-choice" action="{% url 'content:autograde' user.id question.id %}" method="post">
   {% csrf_token %}
 
 
@@ -93,8 +107,8 @@
   ------------------------------------------------------------------------- -->
   {% if question.form == "Short Answer" %}
   <div class="button-container">
-     <input class="short-answer" type="text" name="choice" id="choice" value=""/>
-       <label for="choice"></label>
+     <input class="short-answer" type="text" name="answer" id="answer" value=""/>
+       <label for="answer"></label>
   </div>
       <br />
 
@@ -104,9 +118,15 @@
   Multiple choice.
   ------------------------------------------------------------------------- -->
   {% elif question.form == "Multiple Choice" %}
-    {% autoescape off %}
-      {{ question.choices }}
-    {% endautoescape %}
+    {% if question_answered %}
+     {% autoescape off %}
+      {% mc_choices question True %}
+     {% endautoescape %}
+    {% else %}
+     {% autoescape off %}
+      {% mc_choices question False %}
+     {% endautoescape %}
+    {% endif %}
 
 
 
@@ -147,9 +167,12 @@
   Submit button
   ------------------------------------------------------------------------- -->
   <div class="button-container">
+<!--
    {% if not answered %}
      <input class=autograde type="submit" value="Grade" />
    {% endif %}
+-->
+     <input class=autograde type="submit" value="Grade" />
   </div>
   </form>
 {% endif %}
@@ -161,10 +184,9 @@
   ------------------------------------------------------------------------- -->
 {% if user.username != "" %}
  {% if question.correct != NULL %}
-  <!-- 
-     {{ question.correct }}
-     {{ user.answered }}
-    -->
+   <div class="solution-container">
+     {{ question.correct  }}, the answer is <tt>{{ question.solution }}</tt>.
+   </div>
  {% endif %}
 {% endif %}
 
@@ -207,3 +229,6 @@
   </center>
 {% endif %}
 
+<!-- 
+  </div>
+  -->

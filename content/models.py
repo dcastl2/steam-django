@@ -206,16 +206,21 @@ class Question(models.Model):
     s += str(self.domain)  + ').';
     return s;
  
-  def choices(self):
+  def choices(self, showcorrect):
    lines = self.solution.splitlines();
    html = "";
    i=0;
-   for line in lines:
-     line  = line[1:];
-     choicestr = "choice"+str(i);
-     html += "<input type='radio' id='"+choicestr+"' value='"+choicestr+"' name='choice'>";
-     html += "<label class=mc for="+str(i)+">"+line+"</label></input><br>";
-     i += 1
+   if not showcorrect:
+       for line in lines:
+           if not showcorrect: line  = line[1:];
+           choicestr = "choice"+str(i);
+           html += "<input type='radio' ";
+           html += " id='"+choicestr+"' value='"+choicestr+"' name='choice'>";
+           html += "<label ";
+           if not showcorrect: html += "class=mc-correct";
+           else:               html += "class=mc";
+           html += " for="+str(i)+">"+line+"</label></input><br>";
+           i += 1;
    return html;
  
   def textformat(self):
@@ -297,6 +302,12 @@ class Assessment(models.Model):
         "select * from content_question where "+self.constraint
                                  ):
       AssessmentQuestion.create(q, self);
+
+  # TODO: find next unanswered question in the list
+  def next_question(self):
+    qs = self.questions.all();
+    print qs
+    return self
 ################################################################################
 
 ################################################################################
