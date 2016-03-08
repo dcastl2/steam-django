@@ -14,22 +14,21 @@
   ------------------------------------------------------------------------- -->
 {% load staticfiles %}
 {% load content_tags %}
-<link href="{% static "detail.css" %}"      type="text/css" rel="stylesheet"/>
-<script src="{% static "jsvim.js" %}"       type="text/javascript"/></script>
-<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js"> </script>
+<link href="{% static "detail.css" %}"    type="text/css" rel="stylesheet"/>
+<script src="{% static "jsvim.js" %}"     type="text/javascript"/></script>
+<script type="text/javascript" src="http://code.jquery.com/jquery-latest.min.js"> </script>
 <script src="{% static "highlight.js" %}" type="text/javascript"/></script>
+<script src="{% static "clickevents.js" %}" type="text/javascript"/></script>
 
 {% if user.username != "" %}
  {% answered_question user question as answered %}
 {% endif %}
 
 
-<!-- 
-  <div class="panels-container">
-  -->
 
-<!-- -------------------------------------------------------------------------
-  Display the username.
+<body>
+<div class="panels-container">
+
 {% if user.username != "" %}
   <div class="left-panel">
     <div class="name-container">
@@ -40,12 +39,11 @@
   <div class="right-panel">
     <div class="next-button">
           <span style="display:inline-block; vertical-align:middle; position:relative; top:45%">
-            &gt;
+            {% next_question user assessment question %}
           </span>
     </div>
   </div>
 {% endif %}
-  ------------------------------------------------------------------------- -->
 
 
 
@@ -56,7 +54,7 @@
  <div class=question-container>
   <div class=question-header-container>
     {{ question.concept }}: {{ question.stars }} {{ question.bloom }}, {{ question.form }}
-   ({{ question.domain  }}{% if question.subdomain != "" %}: {{ question.subdomain }}{% endif %}).
+     ({{ question.domain  }}{% if question.subdomain != "" %}: {{ question.subdomain }}{% endif %}).
   </div>
   &nbsp;
   {% autoescape off %}
@@ -96,33 +94,45 @@
 <!-- -------------------------------------------------------------------------
   Form for a question response.
   ------------------------------------------------------------------------- -->
-{% if user.username != "" and question.solution %}
+{% if user.username != "" and question.solution != "" %}
   <form class="multiple-choice" action="{% url 'content:autograde' user.id question.id %}" method="post">
   {% csrf_token %}
 
 
+  {% if question.form == "Likert Scale" %}
+<!-- -------------------------------------------------------------------------
+  Liker Scale.
+  ------------------------------------------------------------------------- -->
+  <div class="button-container">
+     <input class="likert-scale" type="range" min="1" max="9" name="answer" id="answer" onchange="showSliderValue()"/>
+       <label for="answer"></label>
+  </div>
+  <br />
 
+
+  {% elif question.form == "Short Answer" %}
 <!-- -------------------------------------------------------------------------
   Short answer.
   ------------------------------------------------------------------------- -->
-  {% if question.form == "Short Answer" %}
   <div class="button-container">
      <input class="short-answer" type="text" name="answer" id="answer" value=""/>
        <label for="answer"></label>
   </div>
-      <br />
+  <br />
 
 
 
+  {% elif question.form == "Multiple Choice" %}
 <!-- -------------------------------------------------------------------------
   Multiple choice.
   ------------------------------------------------------------------------- -->
-  {% elif question.form == "Multiple Choice" %}
-    {% if question_answered %}
+    {% if answered %}
+    <!-- answered -->
      {% autoescape off %}
       {% mc_choices question True %}
      {% endautoescape %}
     {% else %}
+    <!-- not answered -->
      {% autoescape off %}
       {% mc_choices question False %}
      {% endautoescape %}
@@ -130,10 +140,10 @@
 
 
 
+  {% elif question.form == "Code Writing" %}
 <!-- -------------------------------------------------------------------------
   Code writing.
   ------------------------------------------------------------------------- -->
-  {% elif question.form == "Code Writing" %}
   <textarea id=sandbox>
   #include <iostream>
   
@@ -185,7 +195,7 @@
 {% if user.username != "" %}
  {% if question.correct != NULL %}
    <div class="solution-container">
-     {{ question.correct  }}, the answer is <tt>{{ question.solution }}</tt>.
+     {{ question.correct  }}, the answer is <tt>{{ question.get_solution }}</tt>.
    </div>
  {% endif %}
 {% endif %}
@@ -226,9 +236,13 @@
 {% if answered  %}
   <center>
   You answered this question already.
+  {% next_question user assessment question %}
   </center>
 {% endif %}
 
+</div>
+</body>
+
 <!-- 
   </div>
-  -->
+-->

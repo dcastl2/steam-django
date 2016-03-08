@@ -1,338 +1,316 @@
-/**
- * TODO: 
- *   panels
- *   fading effects
- *   overflow
- */
 
 a:visited,
 
-a:link {
+a:link
+{
   color            : black;
   font-weight      : bold;
   text-decoration  : none;
 }
 
-a:hover {
+
+a:hover
+{
   color : red;
 }
 
-body {
- background    : #FFFFFF;
- margin-top    : 0px;
- margin-bottom : 0px;
-}
 
-dt {
+dt
+{
   font-weight  : bold;
   margin-top   : 20px;
 }
 
-dl {
+
+dl
+{
   margin-left  : 40px;
 }
 
-div.assessment-container {
-  padding       : 5px;
-  background    : #FFFFFF;
-  color         : black;
+
+div
+{
   border-radius : 5px;
+  padding       : 5px;
+}
+
+
+div.assessment-container
+{
   border        : 2px solid black;
-  margin-left   : auto;
-  margin-right  : auto;
-  margin-top    : 20px;
-  margin-bottom : 10px;
   width         : 400px;
   height        : 20px;
   float         : left;
   text-align    : center;
 }
 
-div.button-container {
-  background    : #FFFFFF;
-  color         : black;
-  border-radius : 1px;
-  margin-top    : 10px;
+
+div.button-container
+{
+  margin-top    : 10px auto auto -50px;
   float         : bottom center;
   width         : 800px;
   text-align    : center;
-  margin-left   : -50px;
 }
 
-div.code-container {
-  margin-top    : 40px;
-  margin-bottom : 20px;
+
+div.item-container
+{
+  margin-top    : 10px 10px 20px 10px;
 }
 
-div.code-header-container {
-  background    : #FFFFFF;
-  color         : black;
-  border-radius : 1px;
-  border        : 2px solid black;
-  padding       : 10px;
-  display       : inline;
-  margin-left   : 80px;
-  margin-right  : auto;
-  top           : 60px;
-}
 
-div.image-container {
-  margin-top    : -10px;
-  margin-left   : auto;
-  margin-right  : auto;
-  width         : 600px;
-}
-
-div.item-container {
-  background    : #FFFFFF;
-  color         : black;
-  border-radius : 5px;
-  padding       : 5px;
-  margin-top    : 10px;
-  margin-left   : 10px;
-  margin-right  : 10px;
-  margin-bottom : 20px;
-}
-
-div.item-header-container {
-  background    : black;
-  color         : white;
+div.item-header-container
+{
   font-weight   : bold;
-  border-radius : 5px;
-  padding       : 3px;
   display       : inline;
 }
 
-div.left-panel {
-  padding       : 5px;
-  background    : #FFFFFF;
+
+div.left-panel
+{
   color         : gray;
-  border-radius : 5px;
-/*border        : 1px solid gray;*/
-  margin-left   : 10px;
-  margin-right  : auto;
-  margin-top    : 20px;
-  margin-bottom : 10px;
+  width         : 380px;
+  height        : 500px;
+  float         : center;
+  text-align    : center;
+/*border        : 1px solid black;*/
+  display       : inline;
+}
+
+
+div.login-container
+{
+  color         : gray;
+  margin-top    : 20px auto 10px auto;
   width         : 425px;
   height        : 300px;
-  float         : left;
+  float         : center;
   text-align    : center;
-  position      : relative;
 }
 
-div.right-panel {
-  padding       : 5px;
-  background    : #FFFFFF;
+
+div.right-panel
+{
   color         : gray;
-  border-radius : 5px;
-/*border        : 1px solid gray;*/
-  margin-left   : 10px;
-  margin-right  : auto;
-  margin-top    : 20px;
-  margin-bottom : 10px;
-  width         : 425px;
+  width         : 380px;
   height        : 500px;
-  float         : right;
+  float         : center;
   text-align    : center;
-  position      : relative;
+/*border        : 1px solid black;*/
+  display       : inline;
 }
 
-div.next-button {
-  padding          : 5px;
+
+div.next-button
+{
   background-color : black;
   color            : white;
-  border-radius    : 10px;
   border           : 1px solid gray;
-  margin-left      : auto;
-  margin-right     : auto;
-  margin-top       : 20px;
-  margin-bottom    : 10px;
   width            : 25px;
   height           : 440px;
-  float            : left;
+  float            : right;
   text-align       : center;
-  position         : relative;
   vertical-align   : middle;
-  display          : inline-block;
+/*display          : inline-block;*/
 }
 
-div.logout-container {
-  padding       : 5px;
-  background    : #FFFFFF;
-  color         : black;
-  border-radius : 5px;
+
+div.logout-container
+{
   border        : 2px solid black;
-  margin-left   : auto;
-  margin-right  : auto;
-  margin-top    : 20px;
-  margin-bottom : 10px;
+  margin        : 20px auto 10px auto;
   width         : 100px;
   height        : 20px;
   text-align    : center;
 }
 
-div.main-container {
-  background    : #FFFFFF;
+
+div.main-container
+{
   height        : 496px;
   width         : 800px;
   float         : center;
-  margin-left   : auto;
-  margin-right  : auto;
-  margin-bottom : 25px;
+  margin        : auto;
+  margin-bottom : 19px;
   border        : 2px dotted black;
-  padding       : 5px 5px 5px 5px;
-  overflow      : hidden;
+  overflow      : scroll;
 }
 
-div.name-container {
-  padding       : 5px;
-  background    : #FFFFFF;
-  color         : black;
-  border-radius : 5px;
+
+div.name-container
+{
   border        : 2px solid black;
-  margin-left   : auto;
-  margin-right  : auto;
-  margin-top    : 20px;
-  margin-bottom : 10px;
+  margin        : 20px auto 10px auto;
   width         : 400px;
   height        : 20px;
-  float         : left;
+  float         : center;
   text-align    : center;
 }
 
-div.panels-container {
-  background    : #FFFFFF;
-  height        : 496px;
-  width         : 1200px;
-  margin-left   : auto;
-  margin-right  : auto;
-  margin-bottom : 40px;
-  padding       : 5px 5px 5px 5px;
-  float         : center;
-  display       : inline;
+
+div.question-container
+{
+  margin-top    : 10px 10px 20px 10px;
 }
 
-div.question-container {
-  background    : #FFFFFF;
-  color         : black;
-  border-radius : 5px;
-  padding       : 5px;
-  margin-top    : 10px;
-  margin-left   : 10px;
-  margin-right  : 10px;
-  margin-bottom : 20px;
+
+div.question-header-container
+{
+  background-color : black;
+  color            : white;
+  font-weight      : bold;
+  display          : inline;
 }
 
-div.question-header-container {
-  background    : black;
-  color         : white;
-  font-weight   : bold;
-  border-radius : 5px;
-  padding       : 3px;
-  display       : inline;
-}
 
-div.solution-container {
-  padding-left  : 20px;
-  padding-right : 20px;
-  background    : #FFFFFF;
-  color         : black;
-  margin-left   : auto;
-  margin-right  : auto;
-  margin-top    : 20px;
-  margin-bottom : 10px;
+div.solution-container
+{
+  padding       : 0px 20px 0px 20px;
+  margin        : 20px auto 10px auto;
   width         : 600px;
   height        : 100px;
   text-align    : center;
 }
 
-div.source-code {
-  padding-left  : 20px;
-  padding-right : 20px;
-  background    : #FFFFFF;
-  color         : black;
-  border-radius : 5px;
+
+div.source-code
+{
+  margin        : 20px auto 10px auto;
+  padding       : 0px 20px 0px 20px;
   border        : 2px solid black;
-  margin-left   : auto;
-  margin-right  : auto;
-  margin-top    : 20px;
-  margin-bottom : 10px;
   width         : 600px;
   height        : 320px;
   overflow      : scroll;
 }
 
-form.multiple-choice {
+
+form.multiple-choice
+{
   width          : 700px;
-  margin-left    : auto;
-  margin-right   : auto;
+  margin         : auto;
 }
 
-label {
+
+label
+{
   color         : gray;
-  margin-left   : auto;
-  margin-right  : auto;
+/*margin        : auto;*/
 }
 
-label.mc-correct {
+
+label.mc-correct
+{
   color         : green;
-  margin-left   : auto;
-  margin-right  : auto;
 }
 
-img {
+
+img
+{
   width         : 600px;
   float:        : center; 
-  margin-left   : auto;
-  margin-right  : auto;
+  margin        : auto;
   height        : 400px;
 }
 
-input.short-answer {
-  width            : 200px;
+
+input
+{
+  width            : 100px;
   float            : bottom right;
   border           : 2px solid black;
-  border-radius    : 5px;
   color            : white;
   background-color : black;
+  margin           : auto;
+}
+
+
+input.radio
+{
+  width            : 50px;
+  margin           : 10px;
+}
+
+
+input.autograde
+{
   margin-top       : 0px;
 }
 
-input.autograde {
-  width            : 200px;
-  float            : bottom right;
-  border           : 2px solid black;
-  border-radius    : 5px;
-  color            : white;
-  background-color : black;
+
+input#login-button
+{
   margin-top       : 0px;
 }
 
-li {
+
+input#password
+{
+  float            : center;
+  margin           : 2px;
+}
+
+
+input#username
+{
+  background-color : white;
+  color            : black;
+  float            : center;
+  margin           : 2px;
+}
+
+
+li
+{
   margin-top: 10px;
 }
 
-span.keyword  { color : #990000; }
-span.literal  { color : #006600; }
-span.operator { color : #000099; }
-span.name     { color : #999900; }
 
-table {
+span.keyword 
+{ color : #990000; }
+
+span.literal 
+{ color : #006600; }
+
+span.operator
+{ color : #000099; }
+
+span.name    
+{ color : #999900; }
+
+
+table
+{
   margin-left:  auto;
   margin-right: auto;
-  width       : 400px;
-  padding     : 10px;
+  width       : 700px;
+  padding     : 1px;
+  font-size   : 8pt;
 }
 
-td {
-  padding: 10px;
+
+table#login-table
+{
+  width       : 300px;
+  font-size   : 12pt;
 }
 
-textarea {
+
+td
+{
+  padding: 5px;
+}
+
+
+textarea
+{
   width          : 700px;
   height         : 200px;
 }
 
-tt  {
+
+tt
+{
   background-color : #DDDDDD;
 }
+

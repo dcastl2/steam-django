@@ -49,6 +49,7 @@ question_formats = (
  ('Multiple Choice',   'Multiple Choice'),
  ('Short Answer',      'Short Answer'),
  ('Code Writing',      'Code Writing'),
+ ('Likert Scale',      'Likert Scale'),
 );
 item_formats = (
  ('Fact(s)',           'Fact(s)'),
@@ -133,7 +134,6 @@ class MyUser(AbstractBaseUser):
  
   def has_answered_question(self, qid):
         str_qid = ","+str(qid)+",";
-        #answer_list = self.answered.split(",");
         return (str_qid in self.answered);
  
   def push_answered_question(self, qid):
@@ -183,6 +183,21 @@ class Code(models.Model):
     return str(self.lang)+": "+str(self.name);
 ################################################################################
 
+
+# Produce HTML for the ith line of an MC question
+def ith_choice(line, i, showcorrect):
+  html = "";
+  line = line[1:];
+  choicestr = "choice"+str(i);
+  html += "<input type='radio' ";
+  html += " id='"+choicestr+"' value='"+choicestr+"' name='choice'>";
+  html += "<label ";
+  if showcorrect and line[0]=='*': html += "class=mc-correct";
+  else:                            html += "class=mc";
+  html += " for="+str(i)+">"+line+"</label></input><br>\n";
+  return html;
+
+
 ################################################################################
 # Question model
 ################################################################################
@@ -198,6 +213,7 @@ class Question(models.Model):
   image     = models.ImageField(blank=True, null=True);
   text      = models.TextField();
   solution  = models.TextField();
+  points    = models.FloatField();
  
   def __str__(self):
     s  = str(self.concept) + ', L. ';
@@ -210,18 +226,19 @@ class Question(models.Model):
    lines = self.solution.splitlines();
    html = "";
    i=0;
-   if not showcorrect:
-       for line in lines:
-           if not showcorrect: line  = line[1:];
-           choicestr = "choice"+str(i);
-           html += "<input type='radio' ";
-           html += " id='"+choicestr+"' value='"+choicestr+"' name='choice'>";
-           html += "<label ";
-           if not showcorrect: html += "class=mc-correct";
-           else:               html += "class=mc";
-           html += " for="+str(i)+">"+line+"</label></input><br>";
-           i += 1;
+   for line in lines:
+     html += ith_choice(line, i, showcorrect);
+     i += 1;
    return html;
+
+  def get_solution(self):
+   lines = self.solution.splitlines();
+   html = "";
+   i=0;
+   for line in lines:
+     if line[0] == '*':
+       return line[1:];
+   return "NULL";
  
   def textformat(self):
    return publish_parts(self.text, writer_name='html')['html_body'];
@@ -275,6 +292,7 @@ class Assessment(models.Model):
    
   name       = models.CharField(max_length=64);
   constraint = models.TextField();
+  scale      = models.FloatField();
   questions  = models.ManyToManyField(
                                      Question,
                                      through='AssessmentQuestion',
@@ -299,15 +317,34 @@ class Assessment(models.Model):
   
   def associate(self):
     for q in Question.objects.raw(
-        "select * from content_question where "+self.constraint
-                                 ):
+        "select * from content_question where "+self.constraint):
       AssessmentQuestion.create(q, self);
 
-  # TODO: find next unanswered question in the list
-  def next_question(self):
-    qs = self.questions.all();
-    print qs
-    return self
+  def in_assessment(self, question):
+    return self;
+
+  # TODO: handle if user is AnonymousUser
+  def next_question(self, user, question):
+    first = question;
+    qs    = self.questions.all();
+    qs    = qs.order_by('id');
+    print qs;
+    it    = iter(qs);
+    num   = 0;
+    for q in it:
+      num += 1;
+      #print q.id;
+      if q.id <= question.id:
+        if not user.has_answered_question(q.id) and q.id <  first.id:
+          first = q;
+          print "First question not answered: "+str(first.id);
+      elif not user.has_answered_question(q.id) and q.id != question.id:
+          break;
+    if num >= qs.count():
+      if   question.id <  q.id: return "<a href='"+settings.BASE_URL+"question/"  +str(self.id)+"/"+str(q.id)+"/'"+">&gt;</a>";
+      elif question.id == q.id: return "<a href='"+settings.BASE_URL+"question/"  +str(self.id)+"/"+str(first.id)+"/'"+">&lt;</a>";
+      else:                     return "<a href='"+settings.BASE_URL+"assessment/"+str(self.id)+"/'>&lt;&lt;</a>";
+    return "<a href='"+settings.BASE_URL+"question/"+str(self.id)+"/"+str(q.id)+"/'"+">&gt;</a>";
 ################################################################################
 
 ################################################################################

@@ -3,6 +3,9 @@ from content.models import Question, MyUser
 
 register = template.Library()
 
+# ############################################################################
+# For highlighting code
+# ############################################################################
 @register.simple_tag(takes_context=True)
 def include_code(context, code):
     if not code:
@@ -25,21 +28,38 @@ def include_code(context, code):
                     )
 
 
+# ############################################################################
+# Including an image
+# ############################################################################
 @register.simple_tag(takes_context=True)
 def include_image(context, image):
     if not image:
       return "NULL";
     return "<img src="+image.url+">";
 
-
+# ############################################################################
+# Tell if question was answered
+# ############################################################################
 @register.assignment_tag(takes_context=True)
 def answered_question(context, user, question):
     if not user:
       return False;
     return user.has_answered_question(question.id);
 
+# ############################################################################
+# List choices of multiple choice question
+# ############################################################################
 @register.simple_tag(takes_context=True)
 def mc_choices(context, question, showcorrect):
+    print showcorrect;
     if not question:
+      print "not question";
       return False;
     return question.choices(showcorrect);
+
+# ############################################################################
+# Find next question in assessment
+# ############################################################################
+@register.simple_tag(takes_context=True)
+def next_question(context, user, assessment, question):
+    return assessment.next_question(user, question);

@@ -24,14 +24,16 @@ def index(request):
 # TODO: 
 #   write request data, regardless of type
 #   account for assessment
-def autograde(request, user_id, question_id):
+def autograde(request, assessment_id, question_id):
 
     # Only grade if POST
     if request.method=='POST':
 
         # Get student and question objects
-        student       = get_object_or_404(MyUser,   pk=user_id);
-        question      = get_object_or_404(Question, pk=question_id);
+        user_id       = 4; # FIXME
+        student       = get_object_or_404(MyUser,     pk=user_id);
+        question      = get_object_or_404(Question,   pk=question_id);
+        assessment    = get_object_or_404(Assessment, pk=assessment_id);
 
         # Write response to file
         path          = settings.MEDIA_URL+student.email+"/"+str(question.id);
@@ -61,7 +63,6 @@ def autograde(request, user_id, question_id):
                 print line[0];
                 print "choice"+str(index);
                 if (line[0]=='*'):
-                    question.solution = line[1:];
                     if (request.POST['choice']==("choice"+str(index))):
                         question.correct  = True
                 index+=1
@@ -79,7 +80,10 @@ def autograde(request, user_id, question_id):
         # Return request
         return render( request, 
                          'question/detail.php', 
-                         {'question': question }
+                         {
+                          'question': question,
+                          'assessment': assessment
+                         }
                      )
 
     # Print request if not POST
@@ -111,7 +115,10 @@ def question_detail(request, assessment_id, question_id):
   q = get_object_or_404(Question,   pk=question_id)
   return render(  request, 
                   'question/detail.php',
-                  {'question': q, 'assessment': a}
+                      {
+                        'question'  : q, 
+                        'assessment': a
+                      }
                )
 
 
