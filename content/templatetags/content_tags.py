@@ -1,5 +1,6 @@
 from django  import template
 from content.models import Question, MyUser
+from django.conf    import settings
 
 register = template.Library()
 
@@ -51,7 +52,7 @@ def answered_question(context, user, question):
 # ############################################################################
 @register.simple_tag(takes_context=True)
 def mc_choices(context, question, showcorrect):
-    print showcorrect;
+    #print showcorrect;
     if not question:
       print "not question";
       return False;
@@ -63,3 +64,11 @@ def mc_choices(context, question, showcorrect):
 @register.simple_tag(takes_context=True)
 def next_question(context, user, assessment, question):
     return assessment.next_question(user, question);
+
+# ############################################################################
+# Including an image
+# ############################################################################
+@register.simple_tag(takes_context=True)
+def base_url(context):
+    return settings.BASE_URL;
+

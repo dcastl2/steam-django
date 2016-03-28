@@ -25,7 +25,6 @@
 {% endif %}
 
 
-
 <body>
 <div class="panels-container">
 
@@ -95,7 +94,7 @@
   Form for a question response.
   ------------------------------------------------------------------------- -->
 {% if user.username != "" and question.solution != "" %}
-  <form class="multiple-choice" action="{% url 'content:autograde' user.id question.id %}" method="post">
+  <form class="multiple-choice" action="{% url 'content:autograde' assessment.id question.id %}" method="post">
   {% csrf_token %}
 
 

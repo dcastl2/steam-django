@@ -10,27 +10,29 @@ from .models             import *
 from django.utils.datastructures import MultiValueDictKeyError
 
 
+
 ################################################################################
 # Hello, world
 ################################################################################
 def index(request):
-  return HttpResponse("Hello, world!")
+  return render( request, 
+                       'index.html', 
+               )
 
 
 
 ################################################################################
 # Running autograder on a question
 ################################################################################
-# TODO: 
-#   write request data, regardless of type
-#   account for assessment
+# TODO: account for assessment
 def autograde(request, assessment_id, question_id):
 
     # Only grade if POST
     if request.method=='POST':
 
         # Get student and question objects
-        user_id       = 4; # FIXME
+        user          = request.user;
+        user_id       = user.id;
         student       = get_object_or_404(MyUser,     pk=user_id);
         question      = get_object_or_404(Question,   pk=question_id);
         assessment    = get_object_or_404(Assessment, pk=assessment_id);
@@ -59,23 +61,27 @@ def autograde(request, assessment_id, question_id):
 
         # In the case of multiple choice, determine correctness
         if 'choice' in request.POST:
-            for line in lines:
-                print line[0];
-                print "choice"+str(index);
-                if (line[0]=='*'):
-                    if (request.POST['choice']==("choice"+str(index))):
-                        question.correct  = True
-                index+=1
+           for line in lines:
+               if (line[0]=='*'):
+                  if (request.POST['choice']==("choice"+str(index))):
+                     question.correct  = True
+               index+=1
 
         # In the case of short answer, determine if solution is response
         elif 'answer' in request.POST:
-            if request.POST['answer'] == question.solution:
-                  question.correct = True;
-            else: question.correct = False;
+             if request.POST['answer'] == question.solution:
+                   question.correct =  True;
+             else: question.correct = False;
 
         # In the case of short answer, determine if solution is response
         elif 'sandbox' in request.POST:
-            question.correct = False;
+             question.correct = False;
+
+
+        # Add to the lattice
+        if (question.correct == True):
+           student.increment(question_id, assessment_id);
+
 
         # Return request
         return render( request, 
@@ -88,9 +94,21 @@ def autograde(request, assessment_id, question_id):
 
     # Print request if not POST
     else: print request
-    return render( request, 
-                       'assessment/list.php', 
+    return render( 
+                   request, 
+                   'assessment/list.php' 
                  )
+
+
+
+################################################################################
+# For rendering a profile
+################################################################################
+def profile(request): 
+  return render(
+                  request, 
+                  'myuser/profile.php'
+               )
 
 
 
@@ -104,6 +122,7 @@ def assessment_detail(request, assessment_id):
                   'assessment/detail.php', 
                   {'assessment': q}
                )
+
 
 
 ################################################################################
@@ -134,6 +153,7 @@ def lecture_detail(request, lecture_id):
                )
 
 
+
 ################################################################################
 # For rendering code
 ################################################################################
@@ -144,6 +164,7 @@ def code_detail(request, code_id):
                               {'code': q}, 
                               context_instance=RequestContext(request)
                            )
+
 
 
 ################################################################################
@@ -158,6 +179,7 @@ def item_detail(request, code_id):
                            )
 
 
+
 ################################################################################
 # For rendering an item
 ################################################################################
@@ -170,6 +192,7 @@ def items(request):
                            )
 
 
+
 ################################################################################
 # For rendering a question
 ################################################################################
@@ -180,6 +203,7 @@ def questions(request):
                               {'questions': its}, 
                               context_instance=RequestContext(request)
                            )
+
 
 
 ################################################################################
@@ -206,11 +230,13 @@ def lectures(request):
                            )
 
 
+
 ################################################################################
 # For rendering a login page
 ################################################################################
 def login_page(request):
   return render( request, 'login/login.html', None)
+
 
 
 ################################################################################
@@ -220,7 +246,7 @@ def auth(request):
     username = request.POST['username']
     password = request.POST['password']
     user = authenticate(username=username, password=password)
-    print user
+    #print user
     if user is not None:
         if user.is_active:
             login(request, user)
@@ -231,7 +257,7 @@ def auth(request):
                               context_instance=RequestContext(request)
                    )
     return render(  request, 
-                    'login/login.html', 
+                    settings.BASE_URL+'/login/login.html', 
                    {'request': request}
                  )
 
