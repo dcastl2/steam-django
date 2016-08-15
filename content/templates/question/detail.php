@@ -93,8 +93,7 @@
 <!-- -------------------------------------------------------------------------
   Form for a question response.
   ------------------------------------------------------------------------- -->
-{% if user.username != "" and question.solution != "" %}
-  <form class="multiple-choice" action="{% url 'content:autograde' assessment.id question.id %}" method="post">
+  <form class="multiple-choice" action="{% url 'autograde' assessment.id question.id %}" method="post">
   {% csrf_token %}
 
 
@@ -113,11 +112,13 @@
 <!-- -------------------------------------------------------------------------
   Short answer.
   ------------------------------------------------------------------------- -->
+{% if user.username != "" and question.solution != "" %}
   <div class="button-container">
      <input class="short-answer" type="text" name="answer" id="answer" value=""/>
        <label for="answer"></label>
   </div>
   <br />
+{% endif %}
 
 
 
@@ -175,13 +176,11 @@
 <!-- -------------------------------------------------------------------------
   Submit button
   ------------------------------------------------------------------------- -->
+{% if user.username != "" and question.solution != "" %}
   <div class="button-container">
-<!--
    {% if not answered %}
      <input class=autograde type="submit" value="Grade" />
    {% endif %}
--->
-     <input class=autograde type="submit" value="Grade" />
   </div>
   </form>
 {% endif %}

@@ -143,7 +143,7 @@ class MyUser(AbstractBaseUser):
   is_admin  = models.BooleanField(default=False);
   lattice   = models.TextField();
   answered  = models.TextField();
-  points    = models.FloatField();
+  points    = models.FloatField(null=False, default=0);
 
   objects = MyUserManager();
   USERNAME_FIELD  = 'email'
@@ -319,12 +319,15 @@ class Question(models.Model):
       return html;
 
   def get_solution(self):
-      lines = self.solution.splitlines();
-      html = "";
-      i=0;
-      for line in lines:
-          if line[0] == '*':
-             return line[1:];
+      if (self.form=="Multiple Choice"):
+        lines = self.solution.splitlines();
+        html = "";
+        i=0;
+        for line in lines:
+            if line[0] == '*':
+               return line[1:];
+      elif (self.form=="Short Answer"):
+        return self.solution;
       return "NULL";
  
   def textformat(self):
@@ -413,6 +416,7 @@ class Assessment(models.Model):
   def in_assessment(self, question):
       return self;
 
+
   # TODO: handle if user is AnonymousUser
   def next_question(self, user, question):
       first = question;
@@ -435,7 +439,7 @@ class Assessment(models.Model):
               return "<a href='"+settings.BASE_URL+"assessment/"+str(self.id)+"/'>&lt;&lt;</a>";
          elif question.id == q.id: 
               return "<a href='"+settings.BASE_URL+"question/"  +str(self.id)+"/"+str(first.id)+"/'"+">&lt;</a>";
-         else:return "<a href='"+settings.BASE_URL+"assessment/"+str(self.id)+"/'>&lt;&lt;</a>";
+         else:return "<a href='"+settings.BASE_URL+"assessment/'>&lt;&lt;</a>";
       return "<a href='"+settings.BASE_URL+"question/"+str(self.id)+"/"+str(q.id)+"/'"+">&gt;</a>";
 ################################################################################
 

@@ -5,7 +5,7 @@
 
 <div class=login-container>
   <h1>Login</h1>
-  <form id="login" action="auth" method="post"> 
+  <form id="login" action="{% url 'content:auth' %}" method="post"> 
   {% csrf_token %}
   <table id=login-table>
     <tr> <td> Username: </td> <td> <input type="textbox"  name="username" id="username" value="" /> </td>

@@ -4,10 +4,11 @@ from django.core.files   import File
 from django.db           import models
 from django.http         import HttpResponse
 from django.shortcuts    import get_object_or_404, render, render_to_response
-from django.template     import RequestContext
+from django.template     import RequestContext, loader
 from .forms              import UploadFileForm
 from .models             import *
 from django.utils.datastructures import MultiValueDictKeyError
+import os
 
 
 
@@ -37,8 +38,13 @@ def autograde(request, assessment_id, question_id):
         question      = get_object_or_404(Question,   pk=question_id);
         assessment    = get_object_or_404(Assessment, pk=assessment_id);
 
-        # Write response to file
+        # Make directory if it does not exist
         path          = settings.MEDIA_URL+student.email+"/"+str(question.id);
+        directory     = os.path.dirname(path);
+        try:     os.stat(directory);
+        except:  os.makedirs(directory);
+
+        # Write response to file
         responsefile  = open(path, 'w');
         djangofile    = File(responsefile);
         if   'choice'  in request.POST: djangofile.write(request.POST['choice']);
@@ -115,6 +121,17 @@ def profile(request):
 ################################################################################
 # For rendering a question
 ################################################################################
+def assessment_worksheet(request, assessment_id):
+  q = get_object_or_404(Assessment, pk=assessment_id)
+  return render(
+                  request, 
+                  'assessment/worksheet.php', 
+                  {'assessment': q}
+               )
+
+################################################################################
+# For rendering a question
+################################################################################
 def assessment_detail(request, assessment_id):
   q = get_object_or_404(Assessment, pk=assessment_id)
   return render(
@@ -128,7 +145,7 @@ def assessment_detail(request, assessment_id):
 ################################################################################
 # For rendering a question
 ################################################################################
-def question_detail(request, assessment_id, question_id):
+def assess_question_detail(request, assessment_id, question_id):
   # TODO: check that q in a
   a = get_object_or_404(Assessment, pk=assessment_id)
   q = get_object_or_404(Question,   pk=question_id)
@@ -137,6 +154,20 @@ def question_detail(request, assessment_id, question_id):
                       {
                         'question'  : q, 
                         'assessment': a
+                      }
+               )
+
+
+################################################################################
+# For rendering a question
+################################################################################
+def question_detail(request, question_id):
+  # TODO: check that q in a
+  q = get_object_or_404(Question,   pk=question_id)
+  return render(  request, 
+                  'question/detail.php',
+                      {
+                        'question'  : q, 
                       }
                )
 
@@ -161,8 +192,8 @@ def code_detail(request, code_id):
   q = get_object_or_404(Code, pk=code_id)
   return render_to_response(
                               'code/detail.php', 
-                              {'code': q}, 
-                              context_instance=RequestContext(request)
+                              {'code': q}
+                              #context_instance=RequestContext(request)
                            )
 
 
@@ -174,8 +205,8 @@ def item_detail(request, code_id):
   q = get_object_or_404(Item, pk=code_id)
   return render_to_response(
                               'item/detail.php', 
-                              {'item': q}, 
-                              context_instance=RequestContext(request)
+                              {'item': q}
+                              #context_instance=RequestContext(request)
                            )
 
 
@@ -187,8 +218,8 @@ def items(request):
   its = Item.objects.all()
   return render_to_response(
                               'item/list.php', 
-                              {'items': its}, 
-                              context_instance=RequestContext(request)
+                              {'items': its}
+                              #context_instance=RequestContext(request)
                            )
 
 
@@ -200,8 +231,8 @@ def questions(request):
   its = Question.objects.all()
   return render_to_response(
                               'question/list.php', 
-                              {'questions': its}, 
-                              context_instance=RequestContext(request)
+                              {'questions': its}
+                              #context_instance=RequestContext(request)
                            )
 
 
@@ -213,8 +244,8 @@ def assessments(request):
   its = Assessment.objects.all()
   return render_to_response(
                               'assessment/list.php', 
-                              {'assessments': its}, 
-                              context_instance=RequestContext(request)
+                              {'assessments': its} 
+                              #context_instance=RequestContext(request)
                            )
 
 
@@ -225,8 +256,8 @@ def lectures(request):
   its = Lecture.objects.all()
   return render_to_response(
                               'lecture/list.php', 
-                              {'lectures': its}, 
-                              context_instance=requestcontext(request)
+                              {'lectures': its}
+                              #context_instance=RequestContext(request)
                            )
 
 
@@ -253,11 +284,106 @@ def auth(request):
             its = Assessment.objects.all()
             return render_to_response(
                               'assessment/list.php', 
-                              {'assessments': its},
-                              context_instance=RequestContext(request)
+                              {'assessments': its}
+                              #context_instance=RequestContext(request)
                    )
     return render(  request, 
-                    settings.BASE_URL+'/login/login.html', 
+                    'login/login.html', 
                    {'request': request}
                  )
 
+
+################################################################################
+# Pie chart example
+################################################################################
+def pie(request): 
+	xdata = ["Apple", "Apricot", "Avocado", "Banana", "Boysenberries", "Blueberries", "Dates", "Grapefruit", "Kiwi", "Lemon"]
+	ydata = [52, 48, 160, 94, 75, 71, 490, 82, 46, 17]
+	chartdata = {'x': xdata, 'y': ydata}
+	charttype = "pieChart"
+	chartcontainer = 'piechart_container'
+	data = {
+	    'charttype': charttype,
+	    'chartdata': chartdata,
+	    'chartcontainer': chartcontainer,
+	    'extra': {
+		'x_is_date': False,
+		'x_axis_format': '',
+		'tag_script_js': True,
+		'jquery_on_ready': False,
+	    }
+	}
+	return render_to_response('piechart.html', data)
+
+
+import random
+import datetime
+import time
+################################################################################
+# Line chart example
+################################################################################
+def demo_linechart(request):
+    """
+    lineChart page
+    """
+    start_time = int(time.mktime(datetime.datetime(2012, 6, 1).timetuple()) * 1000)
+    nb_element = 100
+    xdata = range(nb_element)
+    xdata = map(lambda x: start_time + x * 1000000000, xdata)
+    ydata = [i + random.randint(1, 10) for i in range(nb_element)]
+    ydata2 = map(lambda x: x * 2, ydata)
+
+    tooltip_date = "%d %b %Y"
+    extra_serie = {"tooltip": {"y_start": "", "y_end": " cal"},
+                   "date_format": tooltip_date}
+    chartdata = {'x': xdata,
+                 'name1': 'series 1', 'y1': ydata, 'extra1': extra_serie,
+                 'name2': 'series 2', 'y2': ydata2, 'extra2': extra_serie}
+    charttype = "lineWithFocusChart"
+    data = {
+        'charttype': charttype,
+        'chartdata': chartdata
+    }
+    return render_to_response('linechart.html', data)
+
+
+################################################################################
+# Scatter chart example
+################################################################################
+def demo_scatterchart(request):
+    """
+    scatterchart page
+    """
+    nb_element = 50
+    xdata = [i + random.randint(1, 10) for i in range(nb_element)]
+    ydata1 = [i * random.randint(1, 10) for i in range(nb_element)]
+    ydata2 = map(lambda x: x * 2, ydata1)
+    ydata3 = map(lambda x: x * 5, ydata1)
+
+    kwargs1 = {'shape': 'circle'}
+    kwargs2 = {'shape': 'cross'}
+    kwargs3 = {'shape': 'triangle-up'}
+
+    extra_serie1 = {"tooltip": {"y_start": "", "y_end": " balls"}}
+
+    chartdata = {
+        'x': xdata,
+        'name1': 'series 1', 'y1': ydata1, 'kwargs1': kwargs1, 'extra1': extra_serie1,
+        'name2': 'series 2', 'y2': ydata2, 'kwargs2': kwargs2, 'extra2': extra_serie1,
+        'name3': 'series 3', 'y3': ydata3, 'kwargs3': kwargs3, 'extra3': extra_serie1
+    }
+    charttype = "scatterChart"
+    data = {
+        'charttype': charttype,
+        'chartdata': chartdata,
+    }
+    return render_to_response('scatterchart.html', data)
+
+
+################################################################################
+# Table
+################################################################################
+def question_list(request):
+    return render(request, 'question_list.html', {
+        'table': Question.objects.all()
+    })

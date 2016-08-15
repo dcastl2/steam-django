@@ -21,7 +21,7 @@
   </div>
   <div style='width:49%; float:right'>
    {% autoescape off %}
-     {{ user.render_profile }}
+    {{ user.render_profile }}
    {% endautoescape %}
   </div>
  </div>
