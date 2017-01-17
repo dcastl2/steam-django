@@ -4,19 +4,29 @@ from django.contrib.auth.models import Group
 from django.contrib.auth.admin  import UserAdmin as BaseUserAdmin
 from django.contrib.auth.forms  import ReadOnlyPasswordHashField
 
-from .models import Question
 from .models import Item
+from .models import Concept
+from .models import Bloom
+from .models import Level
+from .models import ItemDep
 from .models import Code
-from .models import Assessment
-from .models import Lecture
+from .models import ItemSet
+from .models import CourseItemSet
 from .models import MyUser
 from .models import Response
+from .models import Course
+from .models import CourseUser
 
-admin.site.register(Question)
-admin.site.register(Item)
 admin.site.register(Code)
-admin.site.register(Assessment)
-admin.site.register(Lecture)
+admin.site.register(Level)
+admin.site.register(Concept)
+admin.site.register(Bloom)
+admin.site.register(Item)
+admin.site.register(ItemSet)
+admin.site.register(ItemDep)
+admin.site.register(Course)
+admin.site.register(CourseUser)
+admin.site.register(CourseItemSet)
 admin.site.register(Response)
 
 
@@ -50,7 +60,7 @@ class UserChangeForm(forms.ModelForm):
 
     class Meta:
         model = MyUser
-        fields = ('email', 'password', 'is_active', 'is_admin', 'answered', 'lattice')
+        fields = ('email', 'password', 'is_active', 'is_admin')
 
     def clean_password(self):
         return self.initial["password"]
@@ -65,7 +75,7 @@ class UserAdmin(BaseUserAdmin):
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
     #   ('Personal info', {'fields': ('date_of_birth',)}),
-        ('Permissions',   {'fields': ('is_admin','answered','lattice')}),
+        ('Permissions',   {'fields': ('is_admin',)}),
     )
     add_fieldsets = (
         (None, {
@@ -79,3 +89,5 @@ class UserAdmin(BaseUserAdmin):
 
 admin.site.register(MyUser, UserAdmin)
 admin.site.unregister(Group)
+
+#ModelAdmin.save_as=True

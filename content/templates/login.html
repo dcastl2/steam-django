@@ -1,0 +1,17 @@
+
+{% load staticfiles %}
+{% load content_tags %}
+<link href='{% static "detail.css" %}' type="text/css" rel="stylesheet"/>
+
+<div class=login-container>
+  <h1>Login</h1>
+  <form id="login" action="https://steam.cct.lsu.edu/auth/" method="post"> 
+  {% csrf_token %}
+  <table id=login-table>
+    <tr> <td> Username: </td> <td> <input type="textbox"  name="username" id="username" value="" /> </td>
+    <tr> <td> Password: </td> <td> <input type="password" name="password" id="password" value="" /> </td>
+  </table>
+  <br/>
+  <input id="login-button" type="submit" value="Login" />
+  </form>
+</div>

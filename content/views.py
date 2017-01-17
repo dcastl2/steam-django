@@ -8,7 +8,10 @@ from django.template     import RequestContext, loader
 from .forms              import UploadFileForm
 from .models             import *
 from django.utils.datastructures import MultiValueDictKeyError
+
 import os
+import re
+
 
 
 
@@ -23,78 +26,177 @@ def index(request):
 
 
 ################################################################################
-# Running autograder on a question
+# For rendering a profile
 ################################################################################
-# TODO: account for assessment
-def autograde(request, assessment_id, question_id):
+def profile(request): 
+  return render(
+                  request, 
+                  'profile.php'
+               )
+
+
+
+################################################################################
+# For rendering a item
+################################################################################
+def item(request, item_id):
+  # TODO: check that q in a
+  i = get_object_or_404(Item, pk=item_id)
+  return render(  request, 
+                  'item.php',
+                      {
+                        'item'  : i, 
+                      }
+               )
+
+
+################################################################################
+# For rendering a item
+################################################################################
+def setitem(request, set_id, item_id):
+  # TODO: check that q in a
+  i = get_object_or_404(Item,    pk=item_id)
+  s = get_object_or_404(ItemSet, pk=set_id)
+  return render(  request, 
+                  'item.php',
+                      {
+                        'item' : i, 
+                        'set'  : s, 
+                      }
+               )
+
+
+
+################################################################################
+# For rendering items
+################################################################################
+def items(request):
+  items = Item.objects.all()
+  return render( request,
+                 'items.php', 
+                 {'items': items}
+                 #context_instance=RequestContext(request)
+               )
+
+
+
+################################################################################
+# For rendering an set
+################################################################################
+def set(request, set_id):
+  set = get_object_or_404(ItemSet, pk=set_id)
+  return render( request,
+                 'set.php', 
+                 {'set': set }  
+                 #context_instance=RequestContext(request)
+               )
+
+
+################################################################################
+# For printing an set
+################################################################################
+def printout(request, set_id):
+  set = get_object_or_404(ItemSet, pk=set_id)
+  return render( request,
+                 'print.php', 
+                 {'set': set }  
+                 #context_instance=RequestContext(request)
+               )
+
+
+
+################################################################################
+# For rendering an set
+################################################################################
+def sets(request):
+  sets = ItemSet.objects.all()
+  return render( request,
+                 'sets.php', 
+                 {'sets': sets} 
+                 #context_instance=RequestContext(request)
+               )
+
+
+# Obtained from Wikipedia
+# Levenshtein distance is number of edits required to transform s1
+# to s2.
+def levenshtein(s1, s2):
+    if len(s1) < len(s2):
+        return levenshtein(s2, s1)
+
+    if len(s2) == 0:
+        return len(s1)
+
+    previous_row = range(len(s2) + 1)
+    for i, c1 in enumerate(s1):
+        current_row = [i + 1]
+        for j, c2 in enumerate(s2):
+            insertions = previous_row[j + 1] + 1
+            deletions = current_row[j] + 1
+            substitutions = previous_row[j] + (c1 != c2)
+            current_row.append(min(insertions, deletions, substitutions))
+        previous_row = current_row
+    
+    return previous_row[-1]
+
+
+
+################################################################################
+# Running autograder on a item
+################################################################################
+# TODO: account for set
+def autograde(request, set_id, item_id):
 
     # Only grade if POST
     if request.method=='POST':
 
-        # Get student and question objects
-        user          = request.user;
-        user_id       = user.id;
-        student       = get_object_or_404(MyUser,     pk=user_id);
-        question      = get_object_or_404(Question,   pk=question_id);
-        assessment    = get_object_or_404(Assessment, pk=assessment_id);
+        # Get user and item objects
+        user        = request.user;
+        user_id     = user.id;
+        myuser      = get_object_or_404(MyUser,  pk=user_id);
+        item        = get_object_or_404(Item,    pk=item_id);
+        set         = get_object_or_404(ItemSet, pk=set_id);
 
-        # Make directory if it does not exist
-        path          = settings.MEDIA_URL+student.email+"/"+str(question.id);
-        directory     = os.path.dirname(path);
-        try:     os.stat(directory);
-        except:  os.makedirs(directory);
-
-        # Write response to file
-        responsefile  = open(path, 'w');
-        djangofile    = File(responsefile);
-        if   'choice'  in request.POST: djangofile.write(request.POST['choice']);
-        elif 'answer'  in request.POST: djangofile.write(request.POST['answer']);
-        elif 'sandbox' in request.POST: djangofile.write(request.POST['sandbox']);
-        djangofile.close();
-
-        # Open for reading
-        responsefile  = open(path, 'r');
-        djangofile    = File(responsefile);
-        response = Response(question=question, student=student, formfile=djangofile); 
+        # Save response to file
+        response = Response(item=item, user=myuser, set=set, response=request.POST['response']);
         response.save();
-        djangofile.close();
 
-        # Log that question was answered
-        student.push_answered_question(question.id)
-        index            = 0;
-        lines            = question.solution.splitlines();
-        question.correct = False;
 
-        # In the case of multiple choice, determine correctness
-        if 'choice' in request.POST:
-           for line in lines:
-               if (line[0]=='*'):
-                  if (request.POST['choice']==("choice"+str(index))):
-                     question.correct  = True
-               index+=1
+        # Proceed to grade
+        item.correct = False;
+        item.answered = True;
+
+        if item.form == "Multiple Choice":
+          if request.POST['response'].strip() == item.solution.strip():
+              item.correct  = True
 
         # In the case of short answer, determine if solution is response
-        elif 'answer' in request.POST:
-             if request.POST['answer'] == question.solution:
-                   question.correct =  True;
-             else: question.correct = False;
+        elif item.form == "Short Answer":
+             r = request.POST['response'].lower();
+             s = item.solution.lower();
+             r = re.sub(r'\s+', '', r);
+             s = re.sub(r'\s+', '', s);
+             item.misspelled = False;
+             if s == r:
+                item.correct = True;
+             elif levenshtein(s, r) < 3:
+                item.correct = True;
+                item.misspelled = True;
+             else:
+                item.correct = False;
+   
+        elif item.form == "Multiple Selection":
+          if request.POST['response'].strip() == item.solution.strip():
+              item.correct  = True
 
-        # In the case of short answer, determine if solution is response
-        elif 'sandbox' in request.POST:
-             question.correct = False;
-
-
-        # Add to the lattice
-        if (question.correct == True):
-           student.increment(question_id, assessment_id);
-
+        else: item.correct = False;
 
         # Return request
         return render( request, 
-                         'question/detail.php', 
+                         'item.php', 
                          {
-                          'question': question,
-                          'assessment': assessment
+                          'item': item,
+                          'set':  set
                          }
                      )
 
@@ -102,171 +204,16 @@ def autograde(request, assessment_id, question_id):
     else: print request
     return render( 
                    request, 
-                   'assessment/list.php' 
+                   'index.html' 
                  )
-
-
-
-################################################################################
-# For rendering a profile
-################################################################################
-def profile(request): 
-  return render(
-                  request, 
-                  'myuser/profile.php'
-               )
-
-
-
-################################################################################
-# For rendering a question
-################################################################################
-def assessment_worksheet(request, assessment_id):
-  q = get_object_or_404(Assessment, pk=assessment_id)
-  return render(
-                  request, 
-                  'assessment/worksheet.php', 
-                  {'assessment': q}
-               )
-
-################################################################################
-# For rendering a question
-################################################################################
-def assessment_detail(request, assessment_id):
-  q = get_object_or_404(Assessment, pk=assessment_id)
-  return render(
-                  request, 
-                  'assessment/detail.php', 
-                  {'assessment': q}
-               )
-
-
-
-################################################################################
-# For rendering a question
-################################################################################
-def assess_question_detail(request, assessment_id, question_id):
-  # TODO: check that q in a
-  a = get_object_or_404(Assessment, pk=assessment_id)
-  q = get_object_or_404(Question,   pk=question_id)
-  return render(  request, 
-                  'question/detail.php',
-                      {
-                        'question'  : q, 
-                        'assessment': a
-                      }
-               )
-
-
-################################################################################
-# For rendering a question
-################################################################################
-def question_detail(request, question_id):
-  # TODO: check that q in a
-  q = get_object_or_404(Question,   pk=question_id)
-  return render(  request, 
-                  'question/detail.php',
-                      {
-                        'question'  : q, 
-                      }
-               )
-
-
-################################################################################
-# For rendering a lecture
-################################################################################
-def lecture_detail(request, lecture_id):
-  q = get_object_or_404(Lecture, pk=lecture_id)
-  return render(
-                  request, 
-                  'lecture/detail.php', 
-                  {'lecture': q}
-               )
-
-
-
-################################################################################
-# For rendering code
-################################################################################
-def code_detail(request, code_id):
-  q = get_object_or_404(Code, pk=code_id)
-  return render_to_response(
-                              'code/detail.php', 
-                              {'code': q}
-                              #context_instance=RequestContext(request)
-                           )
-
-
-
-################################################################################
-# For rendering an item
-################################################################################
-def item_detail(request, code_id):
-  q = get_object_or_404(Item, pk=code_id)
-  return render_to_response(
-                              'item/detail.php', 
-                              {'item': q}
-                              #context_instance=RequestContext(request)
-                           )
-
-
-
-################################################################################
-# For rendering an item
-################################################################################
-def items(request):
-  its = Item.objects.all()
-  return render_to_response(
-                              'item/list.php', 
-                              {'items': its}
-                              #context_instance=RequestContext(request)
-                           )
-
-
-
-################################################################################
-# For rendering a question
-################################################################################
-def questions(request):
-  its = Question.objects.all()
-  return render_to_response(
-                              'question/list.php', 
-                              {'questions': its}
-                              #context_instance=RequestContext(request)
-                           )
-
-
-
-################################################################################
-# For rendering an assessment
-################################################################################
-def assessments(request):
-  its = Assessment.objects.all()
-  return render_to_response(
-                              'assessment/list.php', 
-                              {'assessments': its} 
-                              #context_instance=RequestContext(request)
-                           )
-
-
-################################################################################
-# For rendering a lecture
-################################################################################
-def lectures(request):
-  its = Lecture.objects.all()
-  return render_to_response(
-                              'lecture/list.php', 
-                              {'lectures': its}
-                              #context_instance=RequestContext(request)
-                           )
 
 
 
 ################################################################################
 # For rendering a login page
 ################################################################################
-def login_page(request):
-  return render( request, 'login/login.html', None)
+def loginpage(request):
+  return render( request, 'login.html', None)
 
 
 
@@ -281,16 +228,19 @@ def auth(request):
     if user is not None:
         if user.is_active:
             login(request, user)
-            its = Assessment.objects.all()
+            sets = ItemSet.objects.all()
             return render_to_response(
-                              'assessment/list.php', 
-                              {'assessments': its}
+                              'sets.php', 
+                              {'sets': sets}
                               #context_instance=RequestContext(request)
                    )
+
     return render(  request, 
-                    'login/login.html', 
+                    'login.html', 
                    {'request': request}
                  )
+
+
 
 
 ################################################################################
@@ -314,6 +264,8 @@ def pie(request):
 	    }
 	}
 	return render_to_response('piechart.html', data)
+
+
 
 
 import random
@@ -345,6 +297,8 @@ def demo_linechart(request):
         'chartdata': chartdata
     }
     return render_to_response('linechart.html', data)
+
+
 
 
 ################################################################################
@@ -379,11 +333,3 @@ def demo_scatterchart(request):
     }
     return render_to_response('scatterchart.html', data)
 
-
-################################################################################
-# Table
-################################################################################
-def question_list(request):
-    return render(request, 'question_list.html', {
-        'table': Question.objects.all()
-    })
